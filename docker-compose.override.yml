@@ -1,0 +1,19 @@
+services:
+  simulation-api:
+    ports:
+      - "5100:8080"
+  crossriver-adapter:
+    ports:
+      - "5101:8080"
+  projection-engine:
+    ports:
+      - "5102:8080"
+  execution-service:
+    ports:
+      - "5103:8080"
+  webhook-ingest:
+    ports:
+      - "5104:8080"
+  audit-comparison:
+    ports:
+      - "5105:8080"

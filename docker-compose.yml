@@ -1,0 +1,126 @@
+services:
+  api-gateway:
+    image: nginx:1.25-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - simulation-api
+      - webhook-ingest
+
+  simulation-api:
+    build:
+      context: .
+      dockerfile: src/Simulation.Api/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__ApiKey: demo-api-key
+      Services__CrossRiverAdapter: http://crossriver-adapter:8080
+      Services__ProjectionEngine: http://projection-engine:8080
+      Services__ExecutionService: http://execution-service:8080
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=simulation;Username=postgres;Password=postgres
+    depends_on:
+      - crossriver-adapter
+      - projection-engine
+      - execution-service
+      - postgres
+      - redis
+      - rabbitmq
+
+  crossriver-adapter:
+    build:
+      context: .
+      dockerfile: src/CrossRiver.Adapter/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__ApiKey: demo-api-key
+
+  projection-engine:
+    build:
+      context: .
+      dockerfile: src/Projection.Engine/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__ApiKey: demo-api-key
+
+  execution-service:
+    build:
+      context: .
+      dockerfile: src/Execution.Service/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__ApiKey: demo-api-key
+      Services__CrossRiverAdapter: http://crossriver-adapter:8080
+    depends_on:
+      - crossriver-adapter
+
+  webhook-ingest:
+    build:
+      context: .
+      dockerfile: src/Webhook.Ingest/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__ApiKey: demo-api-key
+
+  audit-comparison:
+    build:
+      context: .
+      dockerfile: src/Audit.Comparison/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      Auth__ApiKey: demo-api-key
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: simulation
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./deploy/postgres/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    ports:
+      - "3000:3000"
+
+  loki:
+    image: grafana/loki:3.1.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./deploy/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.104.0
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./deploy/otel/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+
+volumes:
+  postgres-data:

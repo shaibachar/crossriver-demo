@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build And Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore CrossRiverDemo.sln
+
+      - name: Build
+        run: dotnet build CrossRiverDemo.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test CrossRiverDemo.sln --configuration Release --no-build --verbosity normal
+
+      - name: Validate Docker Compose
+        run: docker compose config --quiet

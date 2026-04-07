@@ -1,0 +1,33 @@
+# terraform.tfvars.example
+# ──────────────────────────────────────────────────────────────────────────────
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is git-ignored – never commit real secrets.
+# ──────────────────────────────────────────────────────────────────────────────
+
+aws_region  = "us-east-1"
+project     = "crossriver"
+environment = "prod"
+
+# ── Network ──────────────────────────────────────────────
+vpc_cidr           = "10.0.0.0/16"
+enable_nat_gateway = true
+
+# ── RDS PostgreSQL ────────────────────────────────────────
+db_instance_class = "db.t3.micro"   # use db.t3.small or larger for production
+db_name           = "simulation"
+db_username       = "postgres"
+
+# ── ElastiCache Redis ─────────────────────────────────────
+redis_node_type = "cache.t3.micro"
+
+# ── Amazon MQ (RabbitMQ) ──────────────────────────────────
+mq_instance_type = "mq.t3.micro"
+
+# ── ECS Fargate ───────────────────────────────────────────
+ecs_default_cpu    = 256    # 0.25 vCPU
+ecs_default_memory = 512    # MiB
+service_desired_count = 1
+
+# ── Secrets (required for production) ────────────────────
+# app_api_key        = "your-strong-internal-api-key"
+# crossriver_api_key = "your-real-crossriver-api-key"

@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: simulation-api
+    static_configs:
+      - targets: ["simulation-api:8080"]
+  - job_name: crossriver-adapter
+    static_configs:
+      - targets: ["crossriver-adapter:8080"]
+  - job_name: projection-engine
+    static_configs:
+      - targets: ["projection-engine:8080"]
+  - job_name: execution-service
+    static_configs:
+      - targets: ["execution-service:8080"]
+  - job_name: webhook-ingest
+    static_configs:
+      - targets: ["webhook-ingest:8080"]
+  - job_name: audit-comparison
+    static_configs:
+      - targets: ["audit-comparison:8080"]
